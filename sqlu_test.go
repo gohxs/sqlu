@@ -20,10 +20,12 @@ type User struct {
 	CreateTime time.Time `sqlu:"create_date"`
 }
 
-func prepareDB() (*sql.DB, error) {
+func (u *User) Table() string { return "user" }
+
+func prepareDB(t *testing.T) *sql.DB {
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
-		return nil, err
+		t.Fatal(err)
 	}
 
 	_, err = db.Exec(`
@@ -31,30 +33,27 @@ func prepareDB() (*sql.DB, error) {
 	(
 		id integer ,
 		name string,
-		create_time datetime
+		create_date datetime
 	)`)
 	if err != nil {
-		return nil, err
+		t.Fatal(err)
 	}
 
 	now, err = time.Parse("02-01-2006", "18-12-2017")
 	if err != nil {
-		return nil, err
+		t.Fatal(err)
 	}
 	// Sample
 	_, err = db.Exec(`INSERT INTO "user" VALUES ('1','myname',?)`, now)
 	if err != nil {
-		return nil, err
+		t.Fatal(err)
 	}
 
-	return db, nil
+	return db
 }
 
 func TestScanNamed(t *testing.T) {
-	db, err := prepareDB()
-	if err != nil {
-		t.Fatal(err)
-	}
+	db := prepareDB(t)
 
 	res, err := db.Query(`SELECT name FROM "user"`)
 	if err != nil {
@@ -76,10 +75,7 @@ func TestScanNamed(t *testing.T) {
 }
 
 func TestScan(t *testing.T) {
-	db, err := prepareDB()
-	if err != nil {
-		t.Fatal(err)
-	}
+	db := prepareDB(t)
 
 	res, err := db.Query(`SELECT * FROM "user"`)
 	if err != nil {
@@ -97,5 +93,30 @@ func TestScan(t *testing.T) {
 			t.FailNow()
 		}
 	}
+}
 
+func TestTableInsert(t *testing.T) {
+	db := prepareDB(t)
+
+	res, err := sqlu.TableInsert(db, "user", &User{ID: "2", Name: "name2", CreateTime: time.Now()})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if v, err := res.RowsAffected(); v != 1 && err != nil {
+		t.Fatal("Rows affected should be 1")
+	}
+}
+
+func TestInsert(t *testing.T) {
+	db := prepareDB(t)
+
+	res, err := sqlu.Insert(db, &User{ID: "2", Name: "name2", CreateTime: time.Now()})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if v, err := res.RowsAffected(); v != 1 && err != nil {
+		t.Fatal("Rows affected should be 1")
+	}
 }
