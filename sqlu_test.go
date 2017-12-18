@@ -2,12 +2,16 @@ package sqlu_test
 
 import (
 	"database/sql"
-	"log"
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/gohxs/sqlu"
 	_ "github.com/mattn/go-sqlite3"
+)
+
+var (
+	now time.Time
 )
 
 type User struct {
@@ -33,8 +37,12 @@ func prepareDB() (*sql.DB, error) {
 		return nil, err
 	}
 
+	now, err = time.Parse("02-01-2006", "18-12-2017")
+	if err != nil {
+		return nil, err
+	}
 	// Sample
-	_, err = db.Exec(`INSERT INTO "user" VALUES ('1','myname',?)`, time.Now())
+	_, err = db.Exec(`INSERT INTO "user" VALUES ('1','myname',?)`, now)
 	if err != nil {
 		return nil, err
 	}
@@ -54,11 +62,15 @@ func TestScanNamed(t *testing.T) {
 	}
 	for res.Next() {
 		var user User
+		var testUser = User{Name: "myname"}
 		err = sqlu.ScanNamed(res, &user)
 		if err != nil {
 			t.Fatal(err)
 		}
-		log.Println("User:", user)
+		t.Log("User:", user, testUser)
+		if !reflect.DeepEqual(user, testUser) {
+			t.FailNow()
+		}
 	}
 
 }
@@ -74,12 +86,16 @@ func TestScan(t *testing.T) {
 		t.Fatal(err)
 	}
 	var user User
+	var testUser = User{ID: "1", Name: "myname", CreateTime: now}
 	for res.Next() {
 		err = sqlu.Scan(res, &user)
 		if err != nil {
 			t.Fatal(err)
 		}
-		log.Println("User:", user)
+		t.Log("User:", user, testUser)
+		if !reflect.DeepEqual(user, testUser) {
+			t.FailNow()
+		}
 	}
 
 }
