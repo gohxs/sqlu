@@ -12,7 +12,9 @@ var (
 )
 
 const (
-	tagField = 0
+	tagField     = 0
+	tagOmitEmpty = 1
+	tagType      = 2
 )
 
 // SQLer interface for "sql" package

@@ -15,7 +15,8 @@ var (
 type User struct {
 	ID         string    `sqlu:"id,key"`
 	Name       string    `sqlu:"name"`
-	CreateTime time.Time `sqlu:"create_date"`
+	Alias      string    `sqlu:"nick"`
+	CreateTime time.Time `sqlu:"create_date,,createTimeStamp"`
 }
 
 func (u *User) Table() string { return "user" }
@@ -31,6 +32,7 @@ func prepareDB(t *testing.T) *sql.DB {
 	(
 		id integer ,
 		name string,
+		nick string,
 		create_date datetime
 	)`)
 	if err != nil {
@@ -42,7 +44,7 @@ func prepareDB(t *testing.T) *sql.DB {
 		t.Fatal(err)
 	}
 	// Sample
-	_, err = db.Exec(`INSERT INTO "user" VALUES ('1','myname',?)`, now)
+	_, err = db.Exec(`INSERT INTO "user" VALUES ('1','myname','the first',?)`, now)
 	if err != nil {
 		t.Fatal(err)
 	}

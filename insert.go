@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 )
 
 // Insert insert a struct with Table() with context
@@ -38,14 +39,17 @@ func TableInsertContext(ctx context.Context, db SQLer, table string, data interf
 		if !val.Field(i).CanInterface() {
 			continue
 		}
-
+		var value interface{}
 		tags := strings.Split(f.Tag.Get("sqlu"), ",")
-
-		if len(tags) >= tagField {
-
+		if len(tags) > tagField {
 			fields = append(fields, "\""+tags[tagField]+"\"")
-			values = append(values, val.Field(i).Interface())
+			if len(tags) > tagType && tags[tagType] == "createTimeStamp" {
+				value = time.Now().UTC()
+			} else {
+				value = val.Field(i).Interface()
+			}
 		}
+		values = append(values, value)
 	}
 	qry := fmt.Sprintf(
 		"INSERT INTO \"%s\" (%s) values(%s)",

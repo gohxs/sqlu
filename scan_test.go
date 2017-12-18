@@ -37,7 +37,7 @@ func TestScan(t *testing.T) {
 		t.Fatal(err)
 	}
 	var user User
-	var testUser = User{ID: "1", Name: "myname", CreateTime: now}
+	var testUser = User{ID: "1", Name: "myname", Alias: "the first", CreateTime: now}
 	for res.Next() {
 		err = sqlu.Scan(res, &user)
 		if err != nil {

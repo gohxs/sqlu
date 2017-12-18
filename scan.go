@@ -49,7 +49,7 @@ func ScanNamed(res *sql.Rows, data interface{}) error {
 			continue
 		}
 		// Parse fields
-		if len(tags) >= tagField {
+		if len(tags) > tagField {
 			fields[tags[tagField]] = val.Field(i).Addr().Interface()
 		} else {
 			fields[strings.ToLower(typ.Field(i).Name)] = val.Field(i).Addr().Interface()
