@@ -6,6 +6,31 @@ import (
 	"strings"
 )
 
+func RowToMap(res *sql.Rows) (map[string]interface{}, error) {
+
+	data := map[string]interface{}{}
+	scanParams := []interface{}{}
+	colTypes, err := res.ColumnTypes()
+	if err != nil {
+		return nil, err
+	}
+	for _, ct := range colTypes {
+		p := reflect.New(ct.ScanType())
+		scanParams = append(scanParams, p.Interface())
+	}
+	err = res.Scan(scanParams...)
+	if err != nil {
+		return nil, err
+	}
+	for i, ct := range colTypes {
+		data[ct.Name()] = reflect.ValueOf(scanParams[i]).Elem().Interface()
+	}
+	// Copy?
+
+	return data, nil
+
+}
+
 // Scan a full object
 // usefull when objects perfectly matches a table
 func Scan(res *sql.Rows, data interface{}) error {

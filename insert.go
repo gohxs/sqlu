@@ -41,9 +41,10 @@ func TableInsertContext(ctx context.Context, db SQLer, table string, data interf
 		}
 		var value interface{}
 		tags := parseTag(f.Tag.Get("sqlu"))
-		if tags.fieldName != "" {
-			fields = append(fields, "\""+tags.fieldName+"\"")
+		if tags.fieldName == "" {
+			continue
 		}
+		fields = append(fields, "\""+tags.fieldName+"\"")
 		if tags.CreateTimeStamp || tags.UpdateTimeStamp {
 			value = time.Now().UTC()
 		} else {

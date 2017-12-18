@@ -39,11 +39,10 @@ func TableCreateContext(ctx context.Context, db SQLer, table string, data interf
 		}
 		tags := parseTag(f.Tag.Get("sqlu"))
 
-		var fieldName string
 		var fieldOptions string
 		var typeName = f.Type.Name()
-		if tags.fieldName != "" {
-			fieldName = tags.fieldName
+		if tags.fieldName == "" {
+			continue
 		}
 		if tags.PrimaryKey {
 			fieldOptions += " PRIMARY KEY"
@@ -58,7 +57,7 @@ func TableCreateContext(ctx context.Context, db SQLer, table string, data interf
 			typeName = tn
 		}
 
-		fieldEntry := fmt.Sprintf("\"%s\" %s %s", fieldName, typeName, fieldOptions)
+		fieldEntry := fmt.Sprintf("\"%s\" %s %s", tags.fieldName, typeName, fieldOptions)
 		fields = append(fields, fieldEntry)
 	}
 	qry := fmt.Sprintf(

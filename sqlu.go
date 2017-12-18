@@ -44,7 +44,7 @@ func parseTag(tagStr string) *tagOptions {
 			ret.OmitEmpty = true
 		case "createtimestamp":
 			ret.CreateTimeStamp = true
-		case "udpatetimestamp":
+		case "updatetimestamp":
 			ret.UpdateTimeStamp = true
 		case "unique":
 			ret.Unique = true
