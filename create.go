@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 )
@@ -38,23 +37,34 @@ func TableCreateContext(ctx context.Context, db SQLer, table string, data interf
 		if !val.Field(i).CanInterface() {
 			continue
 		}
-		tags := strings.Split(f.Tag.Get("sqlu"), ",")
-		// Translate types by string somehow
-		if len(tags) >= tagField {
-			typeName, ok := typeMap[f.Type.Name()]
-			if !ok {
-				typeName = f.Type.Name()
-			}
+		tags := parseTag(f.Tag.Get("sqlu"))
 
-			fieldEntry := fmt.Sprintf("\"%s\" %s", tags[tagField], typeName)
-			fields = append(fields, fieldEntry)
+		var fieldName string
+		var fieldOptions string
+		var typeName = f.Type.Name()
+		if tags.fieldName != "" {
+			fieldName = tags.fieldName
 		}
+		if tags.PrimaryKey {
+			fieldOptions += " PRIMARY KEY"
+		}
+		if tags.Unique {
+			fieldOptions += " UNIQUE"
+		}
+		if tags.NotNull {
+			fieldOptions += " NOT NULL"
+		}
+		if tn, ok := typeMap[f.Type.Name()]; ok {
+			typeName = tn
+		}
+
+		fieldEntry := fmt.Sprintf("\"%s\" %s %s", fieldName, typeName, fieldOptions)
+		fields = append(fields, fieldEntry)
 	}
 	qry := fmt.Sprintf(
 		"CREATE TABLE IF NOT EXISTS \"%s\" (%s)",
 		table,
 		strings.Join(fields, ","),
 	)
-	log.Println("Query:", qry)
 	return db.ExecContext(ctx, qry)
 }

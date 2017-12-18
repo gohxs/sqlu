@@ -43,18 +43,18 @@ func ScanNamed(res *sql.Rows, data interface{}) error {
 	// Retrieve the fields into a map
 	for i := 0; i < val.NumField(); i++ {
 		f := typ.Field(i)
-		tags := strings.Split(f.Tag.Get("sqlu"), ",")
-
 		if !val.Field(i).CanInterface() {
 			continue
 		}
-		// Parse fields
-		if len(tags) > tagField {
-			fields[tags[tagField]] = val.Field(i).Addr().Interface()
+		var fieldName string
+		tags := parseTag(f.Tag.Get("sqlu"))
+		if tags.fieldName != "" {
+			fieldName = strings.ToLower(tags.fieldName)
+			val.Field(i).Addr().Interface()
 		} else {
-			fields[strings.ToLower(typ.Field(i).Name)] = val.Field(i).Addr().Interface()
+			fieldName = strings.ToLower(f.Type.Name())
 		}
-
+		fields[fieldName] = val.Field(i).Addr().Interface()
 	}
 
 	params := []interface{}{}

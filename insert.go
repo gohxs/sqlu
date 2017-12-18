@@ -40,14 +40,14 @@ func TableInsertContext(ctx context.Context, db SQLer, table string, data interf
 			continue
 		}
 		var value interface{}
-		tags := strings.Split(f.Tag.Get("sqlu"), ",")
-		if len(tags) > tagField {
-			fields = append(fields, "\""+tags[tagField]+"\"")
-			if len(tags) > tagType && tags[tagType] == "createTimeStamp" {
-				value = time.Now().UTC()
-			} else {
-				value = val.Field(i).Interface()
-			}
+		tags := parseTag(f.Tag.Get("sqlu"))
+		if tags.fieldName != "" {
+			fields = append(fields, "\""+tags.fieldName+"\"")
+		}
+		if tags.CreateTimeStamp || tags.UpdateTimeStamp {
+			value = time.Now().UTC()
+		} else {
+			value = val.Field(i).Interface()
 		}
 		values = append(values, value)
 	}

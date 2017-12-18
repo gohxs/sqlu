@@ -8,9 +8,10 @@ import (
 )
 
 type Brand struct {
-	ID      int       `sqlu:"id"`
+	ID      int       `sqlu:"id,primaryKey"`
 	Name    string    `sqlu:"name"`
-	Created time.Time `sqlu:"create_date,,createTimeStamp"`
+	Field   string    `sqlu:"field,unique,notnull"`
+	Created time.Time `sqlu:"create_date,createTimeStamp"`
 }
 
 func (b *Brand) Table() string { return "brand" }
@@ -24,6 +25,12 @@ func TestCreate(t *testing.T) {
 	}
 	_, err = sqlu.Insert(db, &Brand{ID: 1, Name: "Google"})
 	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Repeat
+	_, err = sqlu.Insert(db, &Brand{ID: 1, Name: "Google"})
+	if err == nil { // Should fail
 		t.Fatal(err)
 	}
 
