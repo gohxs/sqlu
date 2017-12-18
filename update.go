@@ -14,6 +14,9 @@ import (
 func Update(db SQLer, data Tabler) (sql.Result, error) {
 	return TableUpdateContext(context.Background(), db, data.Table(), data)
 }
+func UpdateContext(ctx context.Context, db SQLer, data Tabler) (sql.Result, error) {
+	return TableUpdateContext(ctx, db, data.Table(), data)
+}
 
 //TableUpdateContext update a field based on name
 func TableUpdateContext(ctx context.Context, db SQLer, table string, data interface{}) (sql.Result, error) {
