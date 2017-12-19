@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 	"time"
@@ -33,9 +32,13 @@ func TableUpdateContext(ctx context.Context, db SQLer, table string, data interf
 		if !val.Field(i).CanInterface() {
 			continue
 		}
-		var value interface{}
+		var value = val.Field(i).Interface()
 		tags := parseTag(f.Tag.Get("sqlu"))
 		if tags.fieldName == "" {
+			continue
+		}
+		// if omit empty
+		if tags.OmitEmpty && reflect.Zero(val.Field(i).Type()).Interface() == value {
 			continue
 		}
 
@@ -48,8 +51,6 @@ func TableUpdateContext(ctx context.Context, db SQLer, table string, data interf
 		fields = append(fields, "\""+tags.fieldName+"\" = ?")
 		if tags.UpdateTimeStamp {
 			value = time.Now().UTC()
-		} else {
-			value = val.Field(i).Interface()
 		}
 		values = append(values, value)
 	}
@@ -59,10 +60,10 @@ func TableUpdateContext(ctx context.Context, db SQLer, table string, data interf
 	qry := fmt.Sprintf(
 		"UPDATE \"%s\" SET %s WHERE %s",
 		table,
-		strings.Join(fields, ","),
+		strings.Join(fields, ", "),
 		strings.Join(keys, " AND "),
 	)
-	log.Println("Qry:", qry, params)
+	Log.Println("Qry:", qry, params)
 
 	return db.ExecContext(ctx, qry, params...)
 

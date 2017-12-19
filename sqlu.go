@@ -4,12 +4,19 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"io/ioutil"
+	"log"
 	"strings"
 )
 
 //Errors
 var (
 	ErrNotPointer = errors.New("param is not a pointer")
+)
+
+// Global
+var (
+	Log = log.New(ioutil.Discard, "", 0)
 )
 
 const (

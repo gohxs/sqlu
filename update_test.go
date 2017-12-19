@@ -34,5 +34,27 @@ func TestUpdate(t *testing.T) {
 		sqlu.Scan(res, &u)
 		t.Log("User: ", u)
 	}
+}
+
+func TestOmitEmpty(t *testing.T) {
+	db := prepareDB(t)
+	var updUser = User{ID: "1"}
+
+	sqlu.Update(db, &updUser)
+
+	res, err := db.Query(`SELECT * FROM "user" WHERE id = 1`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for res.Next() {
+		var user User
+		sqlu.Scan(res, &user)
+		if user.Name != "" {
+			t.Fatal("Name should be empty")
+		}
+		if user.Alias == "" {
+			t.Fatal("Alias should not be empty [omitempty]")
+		}
+	}
 
 }

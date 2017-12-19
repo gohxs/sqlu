@@ -39,17 +39,21 @@ func TableInsertContext(ctx context.Context, db SQLer, table string, data interf
 		if !val.Field(i).CanInterface() {
 			continue
 		}
-		var value interface{}
 		tags := parseTag(f.Tag.Get("sqlu"))
-		if tags.fieldName == "" {
+		if tags.fieldName == "" { // Not a sqlu, or malformed
 			continue
 		}
-		fields = append(fields, "\""+tags.fieldName+"\"")
-		if tags.CreateTimeStamp || tags.UpdateTimeStamp {
-			value = time.Now().UTC()
-		} else {
-			value = val.Field(i).Interface()
+
+		var value = val.Field(i).Interface()
+		if tags.OmitEmpty && value == reflect.Zero(val.Field(i).Type()).Interface() {
+			continue
 		}
+		if tags.CreateTimeStamp || tags.UpdateTimeStamp {
+			Log.Printf("[%s] - Create timestamp\n", tags.fieldName)
+			value = time.Now().UTC()
+		}
+
+		fields = append(fields, "\""+tags.fieldName+"\"")
 		values = append(values, value)
 	}
 	qry := fmt.Sprintf(
@@ -58,6 +62,7 @@ func TableInsertContext(ctx context.Context, db SQLer, table string, data interf
 		strings.Join(fields, ","),
 		strings.Repeat("?, ", len(fields)-1)+"?",
 	)
+	Log.Println("QRY:", qry, values)
 
 	return db.ExecContext(ctx, qry, values...)
 }

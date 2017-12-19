@@ -27,16 +27,14 @@ func TestInsert(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if v, err := res.RowsAffected(); v != 1 && err != nil {
 		t.Fatal("Rows affected should be 1")
 	}
 }
-func TestCreateTimestamp(t *testing.T) {
+
+func TestInsertTimestamp(t *testing.T) {
 	db := prepareDB(t)
-
-	now := time.Now()
-
+	now := time.Now().UTC()
 	res, err := sqlu.Insert(db, &User{ID: "2", Name: "name2"})
 	if err != nil {
 		t.Fatal(err)
@@ -53,9 +51,12 @@ func TestCreateTimestamp(t *testing.T) {
 
 		if res.Next() {
 			var user User
-			sqlu.Scan(res, &user)
+			err = sqlu.Scan(res, &user)
+			if err != nil {
+				t.Fatal(err)
+			}
 
-			t.Logf("R: %#v %#v", user, now)
+			t.Logf("R: %v %v", user, now)
 			if user.CreateTime.Day() != now.Day() {
 				t.Fatal("Day is not equal")
 			}

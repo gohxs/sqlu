@@ -17,7 +17,7 @@ func TestScanNamed(t *testing.T) {
 	for res.Next() {
 		var user User
 		var testUser = User{Name: "myname"}
-		err = sqlu.ScanNamed(res, &user)
+		err = sqlu.Scan(res, &user)
 		if err != nil {
 			t.Fatal(err)
 		}

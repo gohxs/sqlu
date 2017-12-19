@@ -65,5 +65,7 @@ func TableCreateContext(ctx context.Context, db SQLer, table string, data interf
 		table,
 		strings.Join(fields, ","),
 	)
+	Log.Println("QRY:", qry)
+
 	return db.ExecContext(ctx, qry)
 }
