@@ -82,7 +82,21 @@ func Scan(res *sql.Rows, data interface{}) error {
 			continue
 		}
 		fieldName = strings.ToLower(tags.fieldName) // Can conflict?
-		fields[fieldName] = val.Field(i).Addr().Interface()
+
+		// Can be a pointer, if so we create the type
+		fval := val.Field(i)
+		if fval.Kind() == reflect.Ptr { // SubPointercase
+			fptr := reflect.New(fval.Type())        // Create *time.Time return **time.Time
+			fvar := reflect.New(fval.Type().Elem()) // Create time.Time, return *time.Time
+			fptr.Elem().Set(fvar)                   // Set the time.Time into fptr
+
+			// Assign ptr into field
+			val.Field(i).Set(fptr.Elem())        // Assign pointer and interface down there
+			fields[fieldName] = fvar.Interface() // field will be the time
+		} else {
+			fields[fieldName] = val.Field(i).Addr().Interface()
+		}
+		// can be a pointer
 	}
 
 	colTyp, err := res.ColumnTypes()
@@ -96,7 +110,6 @@ func Scan(res *sql.Rows, data interface{}) error {
 			/*if v, ok := fields[colName]; ok {
 				reflect.ValueOf(v).Set(reflect.Zero(reflect.TypeOf(v)))
 			}*/
-
 			params = append(params, &sql.NullString{})
 			continue
 		}
@@ -104,8 +117,8 @@ func Scan(res *sql.Rows, data interface{}) error {
 			params = append(params, fv)
 		}
 	}
+	Log.Println("Scanning:", params)
 	return res.Scan(params...)
-
 }
 
 // ScanRaw a full struct

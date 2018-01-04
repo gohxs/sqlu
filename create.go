@@ -37,10 +37,15 @@ func TableCreateContext(ctx context.Context, db SQLer, table string, data interf
 		if !val.Field(i).CanInterface() {
 			continue
 		}
+
+		typeName := val.Field(i).Type().Name()
+		if val.Field(i).Kind() == reflect.Ptr {
+			typeName = val.Field(i).Type().Elem().Name() // Ptr indirect
+		}
+
 		tags := parseTag(f.Tag.Get("sqlu"))
 
 		var fieldOptions string
-		var typeName = f.Type.Name()
 		if tags.fieldName == "" {
 			continue
 		}
@@ -53,7 +58,7 @@ func TableCreateContext(ctx context.Context, db SQLer, table string, data interf
 		if tags.NotNull {
 			fieldOptions += " NOT NULL"
 		}
-		if tn, ok := typeMap[f.Type.Name()]; ok {
+		if tn, ok := typeMap[typeName]; ok {
 			typeName = tn
 		}
 
