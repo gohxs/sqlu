@@ -17,4 +17,5 @@ type SQLer interface {
 type RowScanner interface {
 	Scan(...interface{}) error
 	Columns() ([]string, error)
+	Next() bool
 }

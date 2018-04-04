@@ -23,6 +23,9 @@ func NewRowScanner(row RowScanner) *RowScan {
 		// to avoid alocations
 	}
 }
+func (r *RowScan) Next() bool {
+	return r.row.Next()
+}
 
 //Scan will use scanning thing
 func (r *RowScan) Scan(s Schemer) error {
