@@ -13,6 +13,10 @@ type SQLer interface {
 	QueryRow(query string, args ...interface{}) *sql.Row
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 }
+type DBer interface {
+	Begin() *sql.Tx
+	SQLer
+}
 
 type RowScanner interface {
 	Scan(...interface{}) error

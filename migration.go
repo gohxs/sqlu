@@ -42,7 +42,7 @@ type M struct {
 
 // Migrator migration manager
 type Migrator struct {
-	db      *sql.DB
+	db      DBer
 	tblName string
 }
 
@@ -72,7 +72,7 @@ func (m *MigrationModel) Fields() []interface{} {
 	return Fields(&m.ID, &m.Name, &m.State, &m.CreatedAt)
 }
 
-func Migrate(db *sql.DB, tblName string, migrations []M) error {
+func Migrate(db DBer, tblName string, migrations []M) error {
 	mig, err := NewMigrator(db, tblName)
 	if err != nil {
 		return err
@@ -81,7 +81,7 @@ func Migrate(db *sql.DB, tblName string, migrations []M) error {
 }
 
 // New creates a migration manager
-func NewMigrator(db *sql.DB, tblName string) (*Migrator, error) {
+func NewMigrator(db DBer, tblName string) (*Migrator, error) {
 	m := &Migrator{db, tblName}
 	if err := m.Init(); err != nil {
 		return nil, err
