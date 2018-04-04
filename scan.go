@@ -52,3 +52,20 @@ func (r *RowScan) Scan(s Schemer) error {
 	}
 	return r.row.Scan(r.values...)
 }
+
+func Scan(r RowScanner, s Schemer) error {
+	schema := s.Schema()
+	// Cache columns
+	var err error
+	cols, err := r.Columns()
+	if err != nil {
+		return err
+	}
+	values := make([]interface{}, len(cols))
+	ptrs := s.Fields()
+	for i, cn := range cols {
+		_, fi := schema.fieldByName(cn)
+		values[i] = ptrs[fi]
+	}
+	return r.Scan(values...)
+}
