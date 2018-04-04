@@ -11,7 +11,7 @@ type RowScan struct {
 	started bool
 }
 
-func NewRowScan(row RowScanner) *RowScan {
+func NewRowScanner(row RowScanner) *RowScan {
 	return &RowScan{
 		row:     row,
 		started: false,

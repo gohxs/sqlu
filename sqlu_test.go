@@ -97,7 +97,7 @@ func BenchmarkAsterisk(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		rowScan := sqlu.NewRowScan(rows)
+		rowScan := sqlu.NewRowScanner(rows)
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			u := User{}
@@ -108,7 +108,7 @@ func BenchmarkAsterisk(b *testing.B) {
 				if err != nil {
 					b.Fatal(err)
 				}
-				rowScan = sqlu.NewRowScan(rows)
+				rowScan = sqlu.NewRowScanner(rows)
 				continue
 			}
 			//err = rows.Scan(fields...)
@@ -152,7 +152,7 @@ func BenchmarkField(b *testing.B) {
 		if err != nil {
 			b.Fatal(err)
 		}
-		rowScan := sqlu.NewRowScan(rows)
+		rowScan := sqlu.NewRowScanner(rows)
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			u := User{}
@@ -163,7 +163,7 @@ func BenchmarkField(b *testing.B) {
 				if err != nil {
 					b.Fatal(err)
 				}
-				rowScan = sqlu.NewRowScan(rows)
+				rowScan = sqlu.NewRowScanner(rows)
 				continue
 			}
 			//err = rows.Scan(fields...)

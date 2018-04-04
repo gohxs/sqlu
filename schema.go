@@ -73,3 +73,13 @@ func BuildSchema(name string, init func(s *Schema)) *Schema {
 func Fields(ptrs ...interface{}) []interface{} {
 	return ptrs
 }
+
+// Helper functions
+func (s *Schema) fieldByName(name string) (*Field, int) {
+	for i, f := range s.Fields {
+		if f.Name == name {
+			return &f, i
+		}
+	}
+	return nil, -1
+}
