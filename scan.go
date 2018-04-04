@@ -1,8 +1,8 @@
 package sqlu
 
 type RowScan struct {
-	//rowScan Cache
-	row RowsScanner
+	err  error
+	rows RowsScanner
 	// Cache cols and see different
 	cols []string
 
@@ -11,9 +11,13 @@ type RowScan struct {
 	started bool
 }
 
-func NewRowScanner(row RowsScanner) *RowScan {
+func NewRowScanner(rows RowsScanner, err ...error) *RowScan {
+	if len(err) != 0 && err[0] != nil {
+		return &RowScan{err: err[0]}
+	}
 	return &RowScan{
-		row:     row,
+		err:     nil,
+		rows:    rows,
 		started: false,
 
 		cols:   []string{},
@@ -24,17 +28,20 @@ func NewRowScanner(row RowsScanner) *RowScan {
 	}
 }
 func (r *RowScan) Next() bool {
-	return r.row.Next()
+	return r.rows.Next()
 }
 
 //Scan will use scanning thing
 func (r *RowScan) Scan(s FieldMapper) error {
+	if r.err != nil {
+		return r.err
+	}
 
 	if !r.started {
 		schema := s.Schema()
 		// Cache columns
 		var err error
-		r.cols, err = r.row.Columns()
+		r.cols, err = r.rows.Columns()
 		if err != nil {
 			return err
 		}
@@ -49,27 +56,14 @@ func (r *RowScan) Scan(s FieldMapper) error {
 		r.started = true
 	}
 
+	// Map fields to values
 	fields := s.Fields()
 	for i, fi := range r.fieldI {
 		r.values[i] = fields[fi]
 	}
-	return r.row.Scan(r.values...)
+	return r.rows.Scan(r.values...)
 }
 
-func Scan(r RowScanner, s FieldMapper) error {
-	return r.Scan(s.Fields()...)
-	/*schema := s.Schema()
-	// Cache columns
-	var err error
-	cols, err := r.Columns()
-	if err != nil {
-		return err
-	}
-	values := make([]interface{}, len(cols))
-	ptrs := s.Fields()
-	for i, cn := range cols {
-		_, fi := schema.fieldByName(cn)
-		values[i] = ptrs[fi]
-	}
-	return r.Scan(values...)*/
+func Scan(row RowScanner, s FieldMapper) error {
+	return row.Scan(s.Fields()...)
 }
