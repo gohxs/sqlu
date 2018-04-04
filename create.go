@@ -14,7 +14,7 @@ func CreateQRY(s Schemer) string {
 		createFields[i] = f.Name + " " + f.Type
 	}
 	qry := fmt.Sprintf(
-		"CREATE TABLE \"%s\" (%s);",
+		"CREATE TABLE IF NOT EXISTS \"%s\" (%s);",
 		schema.Table,
 		strings.Join(createFields, ","),
 	)
