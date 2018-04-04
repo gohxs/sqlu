@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-func InsertQRY(s Schemer) (string, []interface{}) {
+func InsertQRY(s FieldMapper) (string, []interface{}) {
 	schema := s.Schema()
 
 	fieldNames := make([]string, len(schema.Fields))
@@ -27,7 +27,7 @@ func InsertQRY(s Schemer) (string, []interface{}) {
 	return qry, fieldPtrs
 }
 
-func Insert(db SQLer, s Schemer) (sql.Result, error) {
+func Insert(db SQLer, s FieldMapper) (sql.Result, error) {
 	q, f := InsertQRY(s)
 	return db.Exec(q, f...)
 }

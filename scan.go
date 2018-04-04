@@ -28,7 +28,7 @@ func (r *RowScan) Next() bool {
 }
 
 //Scan will use scanning thing
-func (r *RowScan) Scan(s Schemer) error {
+func (r *RowScan) Scan(s FieldMapper) error {
 
 	if !r.started {
 		schema := s.Schema()
@@ -56,7 +56,7 @@ func (r *RowScan) Scan(s Schemer) error {
 	return r.row.Scan(r.values...)
 }
 
-func Scan(r RowScanner, s Schemer) error {
+func Scan(r RowScanner, s FieldMapper) error {
 	schema := s.Schema()
 	// Cache columns
 	var err error

@@ -8,12 +8,12 @@ import (
 
 // Sample building facility
 type sample struct {
-	Schemer Schemer
+	Schemer FieldMapper
 	Fields  []string
 }
 
 // Sample returns a sample
-func Sample(s Schemer, fields ...string) sample {
+func Sample(s FieldMapper, fields ...string) sample {
 	return sample{s, fields}
 }
 

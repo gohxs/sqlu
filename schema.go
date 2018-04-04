@@ -8,11 +8,11 @@ var (
 type Opt struct{}
 
 type FieldMapper interface {
+	Schemer
 	Fields() []interface{}
 }
 type Schemer interface {
 	Schema() *Schema
-	FieldMapper
 }
 
 // Field table information

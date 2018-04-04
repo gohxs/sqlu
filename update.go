@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func Update(db SQLer, s Schemer, fnfields []string, where string, fnparams ...interface{}) (sql.Result, error) {
+func Update(db SQLer, s FieldMapper, fnfields []string, where string, fnparams ...interface{}) (sql.Result, error) {
 	schema := s.Schema()
 	// For Schemer fields
 	fields := []string{}
