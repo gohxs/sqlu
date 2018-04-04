@@ -166,7 +166,7 @@ func BenchmarkField(b *testing.B) {
 				rowScan = sqlu.NewRowScanner(rows)
 				continue
 			}
-			//err = rows.Scan(fields...)
+			//err = sqlu.Scan(rows, &u) //.Scan(fields...)
 			err = rowScan.Scan(&u)
 			if err != nil {
 				b.Fatal(err)

@@ -2,7 +2,7 @@ package sqlu
 
 type RowScan struct {
 	//rowScan Cache
-	row RowScanner
+	row RowsScanner
 	// Cache cols and see different
 	cols []string
 
@@ -11,7 +11,7 @@ type RowScan struct {
 	started bool
 }
 
-func NewRowScanner(row RowScanner) *RowScan {
+func NewRowScanner(row RowsScanner) *RowScan {
 	return &RowScan{
 		row:     row,
 		started: false,
@@ -57,7 +57,8 @@ func (r *RowScan) Scan(s FieldMapper) error {
 }
 
 func Scan(r RowScanner, s FieldMapper) error {
-	schema := s.Schema()
+	return r.Scan(s.Fields()...)
+	/*schema := s.Schema()
 	// Cache columns
 	var err error
 	cols, err := r.Columns()
@@ -70,5 +71,5 @@ func Scan(r RowScanner, s FieldMapper) error {
 		_, fi := schema.fieldByName(cn)
 		values[i] = ptrs[fi]
 	}
-	return r.Scan(values...)
+	return r.Scan(values...)*/
 }
