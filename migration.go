@@ -5,8 +5,6 @@ import (
 	"errors"
 	"log"
 	"time"
-
-	"github.com/gohxs/sqlu"
 )
 
 // Migration states
@@ -74,8 +72,8 @@ func (m *MigrationModel) Fields() []interface{} {
 	return Fields(&m.ID, &m.Name, &m.State, &m.CreatedAt)
 }
 
-func Migrate(db *sql.DB, tblName string, migrations []sqlu.M) error {
-	mig, err := sqlu.NewMigrator(db, tblName)
+func Migrate(db *sql.DB, tblName string, migrations []M) error {
+	mig, err := NewMigrator(db, tblName)
 	if err != nil {
 		return err
 	}
