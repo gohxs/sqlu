@@ -14,7 +14,7 @@ type SQLer interface {
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 }
 type DBer interface {
-	Begin() *sql.Tx
+	Begin() (*sql.Tx, error)
 	SQLer
 }
 
