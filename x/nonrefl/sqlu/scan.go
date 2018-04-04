@@ -45,11 +45,36 @@ func (r RowScan) Scan(s Schemer) error {
 		}
 		r.started = true
 	}
-	schema := s.Schema() // slow?
 	// Map
+	ptrs := s.SchemaFields()
 	for i, fi := range r.fieldI {
-		r.values[i] = schema.Fields[fi].Ptr
+		r.values[i] = ptrs[fi]
 	}
 	// map fields to the values
 	return r.row.Scan(r.values...)
+	// Load to temporary and copy/set to the one on param
+	/*err := r.row.Scan(r.fields...)
+	if err != nil {
+		return err
+	}
+	reflect.ValueOf(s).Elem().Set(reflect.ValueOf(r.thing).Elem())
+	return nil*/
+
+	/*ptrs := s.SchemaFields()
+	if len(r.cols) == len(ptrs) {
+		return row.Scan(ptrs...)
+	}
+
+	schema := s.Schema()
+	scanParams := make([]interface{}, len(r.cols))
+	for i, cn := range r.cols {
+		v := schema.fieldPtr(cn)
+		if v == nil {
+			return fmt.Errorf("Field '%s' not found on schemer", cn)
+		}
+		scanParams[i] = v
+
+	}
+
+	return row.Scan(scanParams...)*/
 }

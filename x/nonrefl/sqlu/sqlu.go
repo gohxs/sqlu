@@ -5,7 +5,8 @@ import (
 	"database/sql"
 )
 
-// SQLer wrapper for db, tx
+// SQLer interface for "sql" package
+// Can be sql.DB or sql.Tx
 type SQLer interface {
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
@@ -16,5 +17,6 @@ type SQLer interface {
 
 type RowScanner interface {
 	Scan(...interface{}) error
+	ColumnTypes() ([]*sql.ColumnType, error)
 	Columns() ([]string, error)
 }

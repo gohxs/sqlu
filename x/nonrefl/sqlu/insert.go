@@ -6,7 +6,8 @@ import (
 	"strings"
 )
 
-func InsertQRY(s Schemer) (string, []interface{}) {
+// TableInsertContext using a context
+func Insert(db SQLer, s Schemer) (sql.Result, error) {
 	schema := s.Schema()
 
 	fieldNames := make([]string, len(schema.Fields))
@@ -23,12 +24,5 @@ func InsertQRY(s Schemer) (string, []interface{}) {
 		strings.Join(fieldNames, ","),
 		strings.Repeat("?, ", len(fieldNames)-1)+"?",
 	)
-	return qry, fieldPtrs
-}
-
-func Insert(db SQLer, s Schemer) (sql.Result, error) {
-
-	q, f := InsertQRY(s)
-
-	return db.Exec(q, f...)
+	return db.Exec(qry, fieldPtrs...)
 }

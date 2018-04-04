@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/gohxs/sqler/sqler"
-	"github.com/gohxs/sqlu"
+	"github.com/gohxs/sqlu/x/nonrefl/sqlu"
 	"github.com/gohxs/testu/assert"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -45,7 +45,6 @@ func TestSchema(t *testing.T) {
 	a.Eq(err, nil, "should not error openeing database")
 	_, err = sqlu.Create(db, &User{})
 	a.Eq(err, nil, "create user schema")
-
 	_, err = sqlu.Insert(db, &User{
 		ID:    1,
 		Name:  "Myself",
@@ -57,11 +56,11 @@ func TestSchema(t *testing.T) {
 	s.SetDB(db)
 	s.Cmd(`select * from "user" LIMIT 1`)
 
-	//u := User{}
-	//err = sqlu.Get(db, &u, `SELECT * FROM "user" LIMIT 1`)
-	//a.Eq(err, nil, "should not nil selecting")
+	u := User{}
+	err = sqlu.Get(db, &u, `SELECT * FROM "user" LIMIT 1`)
+	a.Eq(err, nil, "should not nil selecting")
 
-	//t.Log("User:", u)
+	t.Log("User:", u)
 
 }
 
@@ -152,7 +151,7 @@ func prepareDB(b *testing.B) *sql.DB {
 		b.Fatal(err)
 	}
 	for i := 0; i < 100000; i++ { // Insert 100
-		_, err := sqlu.Insert(db, &User{ID: 1, Name: "test", Email: "test@test.t"})
+		_, err = sqlu.Insert(db, &User{ID: 1, Name: "test", Email: "test@test.t"})
 		if err != nil {
 			b.Fatal(err)
 		}

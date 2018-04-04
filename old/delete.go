@@ -21,7 +21,10 @@ func DeleteContext(ctx context.Context, db SQLer, data Tabler) (sql.Result, erro
 
 //TableDeleteContext build and execute delete statement from a struct
 func TableDeleteContext(ctx context.Context, db SQLer, table string, data interface{}) (sql.Result, error) {
-	val := reflect.ValueOf(data).Elem()
+	val := reflect.ValueOf(data)
+	if val.Type().Kind() == reflect.Ptr {
+		val = val.Elem()
+	}
 	typ := val.Type()
 
 	keys := []string{} //?
