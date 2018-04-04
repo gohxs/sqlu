@@ -12,11 +12,12 @@ func Update(db SQLer, s Schemer, fnfields []string, where string, fnparams ...in
 	// For Schemer fields
 	fields := []string{}
 	params := []interface{}{}
-	for _, f := range schema.Fields {
+	fieldptr := s.Fields()
+	for i, f := range schema.Fields {
 		for _, sf := range fnfields {
 			if f.Name == sf {
 				fields = append(fields, f.Name+"= ?")
-				params = append(params, f.Ptr)
+				params = append(params, fieldptr[i])
 			}
 		}
 	}

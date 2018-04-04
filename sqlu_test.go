@@ -2,41 +2,40 @@ package sqlu_test
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/gohxs/sqler/sqler"
 	"github.com/gohxs/sqlu"
 	"github.com/gohxs/testu/assert"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3"
+	//_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 )
 
 type User struct {
-	_schemaCache *sqlu.Schema
-	ID           int    `sqlu:"id,primaryKey"`
-	Name         string `sqlu:"name" db:"name"`
-	Email        string `sqlu:"email" db:"email"`
+	ID    int    `sqlu:"id,primaryKey"`
+	Name  string `sqlu:"name" db:"name"`
+	Email string `sqlu:"email" db:"email"`
 }
 
 // Old
-func (u User) Table() string {
-	return "user"
-}
-
-func (m *User) SchemaFields() []interface{} {
-	return []interface{}{&m.ID, &m.Name, &m.Email}
-}
 
 // Schema
-func (m *User) Schema() sqlu.Schema {
-	return sqlu.Schema{
-		Table: "user",
-		Fields: []sqlu.Field{
-			{&m.ID, "id", "int"},
-			{&m.Name, "name", "string"},
-			{&m.Email, "email", "string"},
+func (m *User) Schema() *sqlu.Schema {
+	return sqlu.BuildSchema(
+		"user",
+		func(s *sqlu.Schema) {
+			s.
+				Field("id", "int").
+				Field("name", "text").
+				Field("email", "text")
 		},
-	}
+	)
+}
+func (m *User) Fields() []interface{} {
+	return sqlu.Fields(&m.ID, &m.Name, &m.Email)
 }
 
 func TestSchema(t *testing.T) {
@@ -65,81 +64,115 @@ func TestSchema(t *testing.T) {
 
 }
 
-// Reflection
-/*func BenchmarkSQLUOld(b *testing.B) {
-	db := prepareDB(b)
+func BenchmarkAsterisk(b *testing.B) {
+	var tQry = `SELECT * FROM "user"`
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		func() {
+	b.Run("SQLX", func(b *testing.B) {
+		dbx := sqlx.NewDb(prepareDB(b), "sqlite3")
+		rows, err := dbx.Queryx(tQry)
+		if err != nil {
+			b.Fatal(err)
+		}
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
 			u := User{}
-			row, err := db.Query(`SELECT name FROM "user" LIMIT 1`)
+			if !rows.Next() {
+				rows.Close()
+				rows, err = dbx.Queryx(tQry)
+				if err != nil {
+					b.Fatal(err)
+				}
+				continue
+			}
+			err = rows.StructScan(&u)
 			if err != nil {
 				b.Fatal(err)
 			}
-			defer row.Close()
-			if !row.Next() {
-				b.Fatal("no rows")
-			}
-			err = sqluold.Scan(row, &u)
-			if err != nil {
-				b.Fatal(err)
-			}
-			if u.ID != 0 && u.Email != "" {
-				b.Fatal("Error should be empty")
-			}
-		}()
-	}
-
-}*/
-var tQry = `SELECT name FROM "user"`
-
-func BenchmarkSQLX(b *testing.B) {
-	db := sqlx.NewDb(prepareDB(b), "sqlite3")
-	//db := prepareDB(b)
-
-	b.ResetTimer()
-	rows, err := db.Queryx(tQry)
-	u := User{}
-	for i := 0; i < b.N; i++ {
-		if !rows.Next() {
-			rows.Close()
-			rows, err = db.Queryx(tQry)
-			if err != nil {
-				b.Fatal(err)
-			}
-			continue
 		}
-		err = rows.StructScan(&u)
+	})
 
+	b.Run("SQLU", func(b *testing.B) {
+		db := prepareDB(b)
+		rows, err := db.Query(tQry)
 		if err != nil {
 			b.Fatal(err)
 		}
-	}
+		rowScan := sqlu.NewRowScan(rows)
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			u := User{}
+			//fields := u.Schema().Fields()
+			if !rows.Next() {
+				rows.Close()
+				rows, err = db.Query(tQry)
+				if err != nil {
+					b.Fatal(err)
+				}
+				rowScan = sqlu.NewRowScan(rows)
+				continue
+			}
+			//err = rows.Scan(fields...)
+			err = rowScan.Scan(&u)
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
 }
-func BenchmarkSQLU(b *testing.B) {
-	db := prepareDB(b)
-	b.ResetTimer()
-	rows, err := db.Query(tQry)
-	u := User{}
-	rowScan := sqlu.NewRowScan(rows)
-	for i := 0; i < b.N; i++ {
-		if !rows.Next() {
-			rows.Close()
-			rows, err = db.Query(tQry)
-			if err != nil {
-				b.Fatal(err)
-			}
-			rowScan = sqlu.NewRowScan(rows)
-			continue
-		}
-		err = rowScan.Scan(&u)
+func BenchmarkField(b *testing.B) {
+	var tQry = `SELECT name,email FROM "user"`
+
+	b.Run("SQLX", func(b *testing.B) {
+		dbx := sqlx.NewDb(prepareDB(b), "sqlite3")
+		rows, err := dbx.Queryx(tQry)
 		if err != nil {
 			b.Fatal(err)
 		}
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			u := User{}
+			if !rows.Next() {
+				rows.Close()
+				rows, err = dbx.Queryx(tQry)
+				if err != nil {
+					b.Fatal(err)
+				}
+				continue
+			}
+			err = rows.StructScan(&u)
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
 
-	}
-
+	b.Run("SQLU", func(b *testing.B) {
+		db := prepareDB(b)
+		rows, err := db.Query(tQry)
+		if err != nil {
+			b.Fatal(err)
+		}
+		rowScan := sqlu.NewRowScan(rows)
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			u := User{}
+			//fields := u.Schema().Fields()
+			if !rows.Next() {
+				rows.Close()
+				rows, err = db.Query(tQry)
+				if err != nil {
+					b.Fatal(err)
+				}
+				rowScan = sqlu.NewRowScan(rows)
+				continue
+			}
+			//err = rows.Scan(fields...)
+			err = rowScan.Scan(&u)
+			if err != nil {
+				b.Fatal(err)
+			}
+		}
+	})
 }
 
 func prepareDB(b *testing.B) *sql.DB {
@@ -147,15 +180,28 @@ func prepareDB(b *testing.B) *sql.DB {
 	if err != nil {
 		b.Fatal(err)
 	}
+	db.Exec(`DROP TABLE "user"`)
 	_, err = sqlu.Create(db, &User{})
 	if err != nil {
 		b.Fatal(err)
 	}
-	for i := 0; i < 100000; i++ { // Insert 100
-		_, err := sqlu.Insert(db, &User{ID: 1, Name: "test", Email: "test@test.t"})
-		if err != nil {
-			b.Fatal(err)
-		}
+	values := []string{}
+	for i := 0; i < 10000; i++ { // Insert 100
+		u := &User{ID: 1, Name: "test", Email: "test@test.t"}
+		values = append(values, fmt.Sprintf("(%d,'%s','%s')", u.ID, u.Name, u.Email))
+	}
+	fullQry := `INSERT INTO "user" (id,name,email) values` + strings.Join(values, ",")
+
+	r, err := db.Exec(fullQry)
+	if err != nil {
+		b.Fatal(err)
+	}
+	affected, err := r.RowsAffected()
+	if err != nil {
+		b.Fatal(err)
+	}
+	if affected != 10000 {
+		b.Fatal(fmt.Errorf("Not enough rows"))
 	}
 
 	return db

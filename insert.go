@@ -10,25 +10,24 @@ func InsertQRY(s Schemer) (string, []interface{}) {
 	schema := s.Schema()
 
 	fieldNames := make([]string, len(schema.Fields))
+	fieldParam := make([]string, len(schema.Fields))
 	fieldPtrs := make([]interface{}, len(schema.Fields))
+	fields := s.Fields()
 	for i, f := range schema.Fields {
 		fieldNames[i] = f.Name
-		fieldPtrs[i] = f.Ptr
+		fieldParam[i] = fmt.Sprintf("$%d", i+1)
+		fieldPtrs[i] = fields[i]
 	}
-	//fieldNames := schema.FieldNames
-	//fieldPtrs := schema.FieldPtrs
 	qry := fmt.Sprintf(
 		"INSERT INTO \"%s\" (%s) values(%s)",
 		schema.Table,
 		strings.Join(fieldNames, ","),
-		strings.Repeat("?, ", len(fieldNames)-1)+"?",
+		strings.Join(fieldParam, ","),
 	)
 	return qry, fieldPtrs
 }
 
 func Insert(db SQLer, s Schemer) (sql.Result, error) {
-
 	q, f := InsertQRY(s)
-
 	return db.Exec(q, f...)
 }

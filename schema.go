@@ -1,58 +1,75 @@
 package sqlu
 
+var (
+	OptOmitEmpty Opt
+	OptKey       Opt
+)
+
+type Opt struct{}
+
+type FieldMapper interface {
+	Fields() []interface{}
+}
 type Schemer interface {
-	Schema() Schema
+	Schema() *Schema
+	FieldMapper
 }
 
-// Schema represents a database schema
-type Schema struct {
-	Table     string
-	Fields    []Field
-	FieldOpts map[string]FieldOpt
-}
-
-// Field table field
+// Field table information
 type Field struct {
-	Ptr  interface{}
-	Name string
-	Type string // or suffix
+	Name      string
+	Type      string // or suffix
+	OmitEmpty bool
+	IsKey     bool
 	// Maybe options
 }
 
-// FieldOpt options for each field
-type FieldOpt struct {
-	OmitEmpty bool
-	IsKey     bool
+// Schema represents a database schema
+type Schema struct { // Internal
+	Table  string
+	Fields []Field
 }
 
-// Schema schema schema that returns a schema for schema be an interface
-func (s *Schema) Schema() *Schema {
+/////////////////////////////////
+// Builder one
+///////////////////////
+
+// AddField SchemaBuilder
+func (s *Schema) Field(name string, typ string, opts ...Opt) *Schema {
+	f := Field{
+		Name: name,
+		Type: typ,
+	}
+	for _, o := range opts {
+		switch o {
+		case OptOmitEmpty:
+			f.OmitEmpty = true
+		case OptKey:
+			f.IsKey = true
+		}
+	}
+	s.Fields = append(s.Fields, f)
 	return s
 }
 
-// This could be cached somehow per table name
+//////////////////////////////////////////
+// builder two
+/////////////////////////////
 
-func (s Schema) fieldNames() []string {
-	names := make([]string, len(s.Fields))
-	for i, f := range s.Fields {
-		names[i] = f.Name
+var schemaCache = map[string]*Schema{}
+
+func BuildSchema(name string, init func(s *Schema)) *Schema {
+	// Cached schema
+	if schema, ok := schemaCache[name]; ok {
+		return schema
 	}
-	return names
+	s := &Schema{Table: name}
+	init(s)
+	schemaCache[name] = s
+	return s
 }
-func (s Schema) fieldTypes() []string {
 
-	types := make([]string, len(s.Fields))
-	for i, f := range s.Fields {
-		types[i] = f.Type
-	}
-	return types
-}
-
-func (s Schema) fieldPtr(name string) interface{} {
-	for _, f := range s.Fields {
-		if f.Name == name {
-			return f.Ptr
-		}
-	}
-	return nil
+// just an alias
+func Fields(ptrs ...interface{}) []interface{} {
+	return ptrs
 }

@@ -18,7 +18,6 @@ func CreateQRY(s Schemer) string {
 		schema.Table,
 		strings.Join(createFields, ","),
 	)
-
 	return qry
 }
 

@@ -31,7 +31,7 @@ func init() {
 }
 
 func TestMain(t *testing.T) {
-	db, err := sql.Open("sqlite3", "tmp.sqlite3")
+	db, err := sql.Open("sqlite3", ":memory:")
 	mig, err := sqlu.NewMigrator(db, "_migrations")
 	if err != nil {
 		t.Fatal(err)
@@ -43,7 +43,7 @@ func TestMain(t *testing.T) {
 	}
 	s := sqler.New()
 	s.SetDB(db)
-	s.Cmd(`select * from "_migrator"`)
+	s.Cmd(`select * from "_migrations"`)
 
 }
 

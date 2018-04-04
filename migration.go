@@ -54,16 +54,22 @@ type MigrationModel struct {
 	CreatedAt time.Time
 }
 
-func (m *MigrationModel) Schema() Schema {
-	return Schema{
-		Table: m.Table,
-		Fields: []Field{
-			{&m.ID, "id", "integer primary key autoincrement"},
-			{&m.Name, "name", "text"},
-			{&m.State, "state", "int"},
-			{&m.CreatedAt, "created_at", "datetime"},
-		},
-	}
+func initMigrationSchema(s *Schema) {
+	s.
+		Field("id", "integer primary key autoincrement").
+		Field("name", "text").
+		Field("state", "int").
+		Field("created_at", "datetime")
+
+}
+func (m *MigrationModel) Schema() *Schema {
+	return BuildSchema(
+		m.Table,
+		initMigrationSchema,
+	)
+}
+func (m *MigrationModel) Fields() []interface{} {
+	return Fields(&m.ID, &m.Name, &m.State, &m.CreatedAt)
 }
 
 // New creates a migration manager
