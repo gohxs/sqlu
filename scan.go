@@ -11,21 +11,21 @@ type RowScan struct {
 	started bool
 }
 
-func NewRowScanner(rows RowsScanner, err ...error) *RowScan {
+func NewRowScanner(rows RowsScanner, err ...error) (*RowScan, error) {
 	if len(err) != 0 && err[0] != nil {
-		return &RowScan{err: err[0]}
+		return nil, err[0]
 	}
 	return &RowScan{
 		err:     nil,
 		rows:    rows,
 		started: false,
 
+		// to avoid alocations
 		cols:   []string{},
 		fieldI: nil,
 
 		values: nil,
-		// to avoid alocations
-	}
+	}, nil
 }
 func (r *RowScan) Next() bool {
 	return r.rows.Next()
