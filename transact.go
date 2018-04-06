@@ -1,11 +1,7 @@
 package sqlu
 
-import (
-	"database/sql"
-)
-
 // Helper
-func Transact(db DBer, fn func(tx *sql.Tx) error) error {
+func Transact(db DBer, fn func(tx Queryer) error) error {
 	var err error
 	tx, err := db.Begin()
 	if err != nil {
