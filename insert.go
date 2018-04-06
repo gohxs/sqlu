@@ -6,28 +6,29 @@ import (
 	"strings"
 )
 
-func InsertQRY(s FieldMapper) (string, []interface{}) {
-	schema := s.Schema()
+func InsertQRY(s Schemer) (string, []interface{}) {
+	schema := S{}
+	s.Schema(&schema)
 
-	fieldNames := make([]string, len(schema.Fields))
-	fieldParam := make([]string, len(schema.Fields))
-	fieldPtrs := make([]interface{}, len(schema.Fields))
-	fields := s.Fields()
-	for i, f := range schema.Fields {
+	fieldNames := make([]string, len(schema.Schema.Fields))
+	fieldParam := make([]string, len(schema.Schema.Fields))
+	fieldPtrs := make([]interface{}, len(schema.Schema.Fields))
+	for i, f := range schema.Schema.Fields {
 		fieldNames[i] = f.Name
 		fieldParam[i] = fmt.Sprintf("$%d", i+1)
-		fieldPtrs[i] = fields[i]
 	}
+	reflectFields(s, fieldPtrs)
+	//schema.LoadFields(fieldPtrs)
 	qry := fmt.Sprintf(
 		"INSERT INTO \"%s\" (%s) values(%s)",
-		schema.Table,
+		schema.Schema.Table,
 		strings.Join(fieldNames, ","),
 		strings.Join(fieldParam, ","),
 	)
 	return qry, fieldPtrs
 }
 
-func Insert(db SQLer, s FieldMapper) (sql.Result, error) {
+func Insert(db Queryer, s Schemer) (sql.Result, error) {
 	q, f := InsertQRY(s)
 	return db.Exec(q, f...)
 }

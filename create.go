@@ -7,20 +7,21 @@ import (
 )
 
 func CreateQRY(s Schemer) string {
-	schema := s.Schema()
+	schema := S{}
+	s.Schema(&schema)
 	// Each field
-	createFields := make([]string, len(schema.Fields))
-	for i, f := range schema.Fields {
+	createFields := make([]string, len(schema.Schema.Fields))
+	for i, f := range schema.Schema.Fields {
 		createFields[i] = f.Name + " " + f.Type
 	}
 	qry := fmt.Sprintf(
 		"CREATE TABLE IF NOT EXISTS \"%s\" (%s);",
-		schema.Table,
+		schema.Schema.Table,
 		strings.Join(createFields, ","),
 	)
 	return qry
 }
 
-func Create(db SQLer, s Schemer) (sql.Result, error) {
+func Create(db Queryer, s Schemer) (sql.Result, error) {
 	return db.Exec(CreateQRY(s))
 }

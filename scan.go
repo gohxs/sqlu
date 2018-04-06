@@ -4,8 +4,8 @@ type RowScan struct {
 	err  error
 	rows RowsScanner
 	// Cache cols and see different
-	cols []string
 
+	schema  S
 	fieldI  []int
 	values  []interface{}
 	started bool
@@ -21,49 +21,54 @@ func NewRowScanner(rows RowsScanner, err ...error) (*RowScan, error) {
 		started: false,
 
 		// to avoid alocations
-		cols:   []string{},
 		fieldI: nil,
-
 		values: nil,
 	}, nil
 }
 func (r *RowScan) Next() bool {
 	return r.rows.Next()
 }
+func (r *RowScan) Close() error {
+	return r.rows.Close()
+}
 
 //Scan will use scanning thing
-func (r *RowScan) Scan(s FieldMapper) error {
+func (r *RowScan) Scan(s Schemer) error {
 	if r.err != nil {
 		return r.err
 	}
-
 	if !r.started {
-		schema := s.Schema()
+		r.schema = S{}
+
+		s.Schema(&r.schema)
 		// Cache columns
-		var err error
-		r.cols, err = r.rows.Columns()
+		cols, err := r.rows.Columns()
 		if err != nil {
 			return err
 		}
-		r.values = make([]interface{}, len(r.cols))
-		for _, cn := range r.cols {
-			for i, f := range schema.Fields {
+		r.fieldI = make([]int, len(cols))
+		for ci, cn := range cols {
+			// Find by name
+			for fi, f := range r.schema.Schema.Fields {
 				if f.Name == cn {
-					r.fieldI = append(r.fieldI, i)
+					r.fieldI[ci] = fi
 				}
 			}
 		}
+		r.values = make([]interface{}, len(cols))
 		r.started = true
 	}
-
-	// Map fields to values
-	fields := s.Fields()
-	for i, fi := range r.fieldI {
-		r.values[i] = fields[fi]
-	}
+	// Load Schema
+	//s.Schema(&r.schema)
+	//r.schema.LoadFields(r.values, r.fieldI...)
+	reflectFields(s, r.values, r.fieldI...)
 	return r.rows.Scan(r.values...)
 }
 
-func Scan(row RowScanner, s FieldMapper) error {
-	return row.Scan(s.Fields()...)
+func Scan(row RowScanner, s Schemer) error {
+	schema := S{}
+	s.Schema(&schema)
+	fields := make([]interface{}, len(schema.Schema.Fields))
+	schema.LoadFields(fields) // Load
+	return row.Scan(fields...)
 }

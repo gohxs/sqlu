@@ -1,13 +1,7 @@
 package sqlu_test
 
 import (
-	"database/sql"
-	"errors"
-	"log"
-	"testing"
-
 	"github.com/gohxs/prettylog"
-	"github.com/gohxs/sqler/sqler"
 	"github.com/gohxs/sqlu"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -30,6 +24,7 @@ func init() {
 	prettylog.Global()
 }
 
+/*
 func TestMain(t *testing.T) {
 	db, err := sql.Open("sqlite3", ":memory:")
 	mig, err := sqlu.NewMigrator(db, "_migrations")
@@ -73,4 +68,4 @@ func TestMigrationError(t *testing.T) {
 	s.SetDB(db)
 	s.Cmd(`select * from "_migrations"`)
 
-}
+}*/

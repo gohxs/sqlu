@@ -7,13 +7,14 @@ import (
 	"strings"
 )
 
-func Update(db SQLer, s FieldMapper, fnfields []string, where string, fnparams ...interface{}) (sql.Result, error) {
-	schema := s.Schema()
+func Update(db Queryer, s Schemer, fnfields []string, where string, fnparams ...interface{}) (sql.Result, error) {
+	schema := S{}
+	s.Schema(&schema)
 	// For Schemer fields
 	fields := []string{}
 	params := []interface{}{}
-	fieldptr := s.Fields()
-	for i, f := range schema.Fields {
+	fieldptr := schema.fields()
+	for i, f := range schema.Schema.Fields {
 		for _, sf := range fnfields {
 			if f.Name == sf {
 				fields = append(fields, f.Name+"= ?")
@@ -25,7 +26,7 @@ func Update(db SQLer, s FieldMapper, fnfields []string, where string, fnparams .
 	params = append(params, fnparams...)
 	qry := fmt.Sprintf(
 		"UPDATE \"%s\" SET %s WHERE %s",
-		schema.Table,
+		schema.Schema.Table,
 		strings.Join(fields, ", "),
 		where,
 	)

@@ -1,19 +1,13 @@
 package sqlu
 
-import (
-	"database/sql"
-	"fmt"
-	"strings"
-)
-
 // Sample building facility
-type sample struct {
-	Schemer FieldMapper
+/*type sample struct {
+	Schemer Schemer
 	Fields  []string
 }
 
 // Sample returns a sample
-func Sample(s FieldMapper, fields ...string) sample {
+func Sample(s Schemer, fields ...string) sample {
 	return sample{s, fields}
 }
 
@@ -25,12 +19,12 @@ func FindQRY(samples ...sample) (string, []interface{}) {
 	table := ""
 	for i, sample := range samples {
 		if i == 0 {
-			table = sample.Schemer.Schema().Table
+			table = sample.Schemer.Schema().Schema.Table
 		}
 		andClause := []string{}
 		for _, sf := range sample.Fields {
-			f, fieldI := sample.Schemer.Schema().fieldByName(sf)
-			fields := sample.Schemer.Fields()
+			f, fieldI := sample.Schemer.Schema().Schema.fieldByName(sf)
+			fields := sample.Schemer.Schema().Fields()
 			params = append(params, fields[fieldI])
 			andClause = append(andClause, fmt.Sprintf("%s=$%d", f.Name, len(params)))
 		}
@@ -51,4 +45,4 @@ func FindQRY(samples ...sample) (string, []interface{}) {
 func Find(db SQLer, samples ...sample) (*sql.Rows, error) {
 	qry, params := FindQRY(samples...)
 	return db.Query(qry, params...)
-}
+}*/

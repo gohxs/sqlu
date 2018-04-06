@@ -2,8 +2,6 @@ package sqlu_test
 
 import (
 	"database/sql"
-	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/gohxs/sqler/sqler"
@@ -14,28 +12,31 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type Common struct {
+	Test string
+}
+
 type User struct {
+	Common
 	ID    int    `sqlu:"id,primaryKey"`
 	Name  string `sqlu:"name" db:"name"`
 	Email string `sqlu:"email" db:"email"`
+
+	Address string
+	Field1  string
+	Field2  string
+	Another string
+	Test    struct{ Name string }
 }
 
 // Old
 
 // Schema
-func (m *User) Schema() *sqlu.Schema {
-	return sqlu.BuildSchema(
-		"user",
-		func(s *sqlu.Schema) {
-			s.
-				Field("id", "int").
-				Field("name", "text").
-				Field("email", "text")
-		},
-	)
+func (m *User) Schema(s *sqlu.S) {
+	s.BuildSchema("user", m, sqlu.ReflectSchema, m.Fields)
 }
-func (m *User) Fields() []interface{} {
-	return sqlu.Fields(&m.ID, &m.Name, &m.Email)
+func (m *User) Fields(values []interface{}, indexes ...int) {
+	sqlu.ReflectFieldsx(m, values, indexes...)
 }
 
 func TestSchema(t *testing.T) {
@@ -93,31 +94,30 @@ func BenchmarkAsterisk(b *testing.B) {
 
 	b.Run("SQLU", func(b *testing.B) {
 		db := prepareDB(b)
-		rows, err := db.Query(tQry)
+		rows, err := sqlu.NewRowScanner(db.Query(tQry))
 		if err != nil {
 			b.Fatal(err)
 		}
-		rowScan := sqlu.NewRowScanner(rows)
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			u := User{}
 			//fields := u.Schema().Fields()
 			if !rows.Next() {
 				rows.Close()
-				rows, err = db.Query(tQry)
+				rows, err = sqlu.NewRowScanner(db.Query(tQry))
 				if err != nil {
 					b.Fatal(err)
 				}
-				rowScan = sqlu.NewRowScanner(rows)
 				continue
 			}
 			//err = rows.Scan(fields...)
-			err = rowScan.Scan(&u)
+			err = rows.Scan(&u)
 			if err != nil {
 				b.Fatal(err)
 			}
 		}
 	})
+
 }
 func BenchmarkField(b *testing.B) {
 	var tQry = `SELECT name,email FROM "user"`
@@ -148,26 +148,24 @@ func BenchmarkField(b *testing.B) {
 
 	b.Run("SQLU", func(b *testing.B) {
 		db := prepareDB(b)
-		rows, err := db.Query(tQry)
+		rows, err := sqlu.NewRowScanner(db.Query(tQry))
 		if err != nil {
 			b.Fatal(err)
 		}
-		rowScan := sqlu.NewRowScanner(rows)
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
 			u := User{}
 			//fields := u.Schema().Fields()
 			if !rows.Next() {
 				rows.Close()
-				rows, err = db.Query(tQry)
+				rows, err = sqlu.NewRowScanner(db.Query(tQry))
 				if err != nil {
 					b.Fatal(err)
 				}
-				rowScan = sqlu.NewRowScanner(rows)
 				continue
 			}
 			//err = sqlu.Scan(rows, &u) //.Scan(fields...)
-			err = rowScan.Scan(&u)
+			err = rows.Scan(&u)
 			if err != nil {
 				b.Fatal(err)
 			}
@@ -185,23 +183,9 @@ func prepareDB(b *testing.B) *sql.DB {
 	if err != nil {
 		b.Fatal(err)
 	}
-	values := []string{}
 	for i := 0; i < 10000; i++ { // Insert 100
 		u := &User{ID: 1, Name: "test", Email: "test@test.t"}
-		values = append(values, fmt.Sprintf("(%d,'%s','%s')", u.ID, u.Name, u.Email))
-	}
-	fullQry := `INSERT INTO "user" (id,name,email) values` + strings.Join(values, ",")
-
-	r, err := db.Exec(fullQry)
-	if err != nil {
-		b.Fatal(err)
-	}
-	affected, err := r.RowsAffected()
-	if err != nil {
-		b.Fatal(err)
-	}
-	if affected != 10000 {
-		b.Fatal(fmt.Errorf("Not enough rows"))
+		sqlu.Insert(db, u)
 	}
 
 	return db

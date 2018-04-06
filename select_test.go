@@ -1,14 +1,6 @@
 package sqlu_test
 
-import (
-	"database/sql"
-	"testing"
-
-	"github.com/gohxs/sqlu"
-	"github.com/gohxs/testu/assert"
-)
-
-func TestFind(t *testing.T) {
+/*func TestFind(t *testing.T) {
 	a := assert.A(t)
 	db, err := sql.Open("sqlite3", ":memory:")
 	a.Eq(err, nil, "error should be nil")
@@ -22,4 +14,4 @@ func TestFind(t *testing.T) {
 	)
 	a.Eq(err, nil, "Should find entries")
 
-}
+}*/

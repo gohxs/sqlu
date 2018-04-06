@@ -54,7 +54,7 @@ type MigrationModel struct {
 	CreatedAt time.Time
 }
 
-func initMigrationSchema(s *Schema) {
+func initMigrationSchema(_ Schemer, s *Schema) {
 	s.
 		Field("id", "integer primary key autoincrement").
 		Field("name", "text").
@@ -62,14 +62,13 @@ func initMigrationSchema(s *Schema) {
 		Field("created_at", "datetime")
 
 }
-func (m *MigrationModel) Schema() *Schema {
-	return BuildSchema(
+func (m *MigrationModel) Schema(s *S) {
+	s.BuildSchema(
 		m.Table,
+		m,
 		initMigrationSchema,
+		Fields(&m.ID, &m.Name, &m.State, &m.CreatedAt),
 	)
-}
-func (m *MigrationModel) Fields() []interface{} {
-	return Fields(&m.ID, &m.Name, &m.State, &m.CreatedAt)
 }
 
 func Migrate(db DBer, tblName string, migrations []M) error {
